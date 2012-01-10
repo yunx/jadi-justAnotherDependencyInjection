@@ -139,9 +139,11 @@ define.module("utils", function utils(module){
 	};
 });
 
-define.clazz("factory.BeanDefinition", function BeanDefinition(bd,utils){
+define.clazz("factory.BeanDefinition", function BeanDefinition(container){
 	var EMPTY_ARRAY = [];
 	var EMPTY_PROPERTY = {};
+	
+	var utils = container.utils;
 	
 	function ParseProperty(prop){
 		if(prop === undefined){
@@ -199,20 +201,44 @@ define.clazz("factory.BeanDefinition", function BeanDefinition(bd,utils){
 			return tbr;
 		}
 	}
-	var tbr = {
-		path : bd.path,
-		scope: bd.scope,
-		args :  Arg(bd.args),
-		property : Property(bd.property),
-		mixin : Arg(bd.mixin)
+	var normalizedFlag = "_normalize";
+	var normalizedAdvice = function(methodName, fn){
+		return function(arg){			
+			if(arg[normalizedFlag]){
+				return arg;
+			}
+			var result = fn(arg);
+			result[normalizedFlag] = true;
+			return result;
+		};
 	};
-
-	for(var name in bd){
-		if(!(name in tbr)){			
-			tbr[name] = bd[name];
+	
+	return container.aop.Interceptor().intercept({
+		normalize : function(bd){
+			var tbr = {
+					path : bd.path,
+					scope: bd.scope,
+					args :  Arg(bd.args),
+					property : Property(bd.property),
+					mixin : Arg(bd.mixin)
+				};
+			for(var name in bd){
+				if(!(name in tbr)){			
+					tbr[name] = bd[name];
+				}
+			}
+			return tbr;
+		},
+		normalizeArg : function(args){
+			return Arg(args);
+		},
+		normalizeProperty : function(property){
+			return Property(property);
+		},
+		normalizeMixin : function(mixin){
+			return Arg(mixin);
 		}
-	}
-	return tbr;
+	}, normalizedAdvice);
 });
 
 define.module("factory.mapping", function mapping(module,container){
@@ -226,6 +252,7 @@ define.module("factory.mapping", function mapping(module,container){
 				arguments = arguments[0]
 			}			
 			var beanDefLength = arguments.length;
+			var defNormalizer = container.factory.BeanDefinition(container);
 			for(var i=0; i < beanDefLength; i++){
 				var beanDefinition = arguments[i];
 				var id = beanDefinition.id;
@@ -234,7 +261,7 @@ define.module("factory.mapping", function mapping(module,container){
 				}
 				var exist = mapping[id];
 				if(exist !== undefined){ throw "bean : [" +id+"] already existed"};
-				mapping[id] = container.factory.BeanDefinition(beanDefinition, container.utils);
+				mapping[id] = defNormalizer.normalize(beanDefinition);
 			}			
 			return this;
 		},
@@ -247,45 +274,50 @@ define.module("factory.mapping", function mapping(module,container){
 define.clazz("factory.BeanGenerator", function BeanGenerator(container){
 	var factory = container.factory;
 	return {
-		create : function(beanDefinition){
-			if(typeof beanDefinition === "string"){
-				beanDefinition = factory.BeanDefinition({path:beanDefinition});
-			}
-			var obj;
+		getBean : function(argBd){
 			var thisCreate = this.create;
-			function getBean(argBd){
-				if(typeof argBd === "string"){
-					var parsed = container.utils.parseColon(argBd);
-					if(parsed){
-						if(parsed.prefix === "id"){
-							return factory.getBean(parsed.subfix);
-						}
-						if(parsed.prefix === "path"){
-							return thisCreate(parsed.subfix);
-						}
-					}					
-				}
-				if(container.utils.isPrimitive(argBd)){
-					return argBd;
-				}
-				if("path" in argBd){
-					return thisCreate(argBd);
-				}
-				if(container.utils.isArray(argBd)){
-					var arrayTbr = [];
-					for(var i=0; i<argBd.length; i++){
-						arrayTbr.push(getBean(argBd[i]));
+			if(typeof argBd === "string"){
+				var parsed = container.utils.parseColon(argBd);
+				if(parsed){
+					if(parsed.prefix === "id"){
+						return factory.getBean(parsed.subfix);
 					}
-					return arrayTbr;
-				}
-				if(container.utils.isObject(argBd)){
-					return argBd;
-				}
+					if(parsed.prefix === "path"){
+						return thisCreate(parsed.subfix);
+					}
+				}					
 			}
+			if(container.utils.isPrimitive(argBd)){
+				return argBd;
+			}
+			if("path" in argBd){
+				return thisCreate(argBd);
+			}
+			if(container.utils.isArray(argBd)){
+				var arrayTbr = [];
+				for(var i=0; i<argBd.length; i++){
+					arrayTbr.push(getBean(argBd[i]));
+				}
+				return arrayTbr;
+			}
+			if(container.utils.isObject(argBd)){
+				return argBd;
+			}
+		},
+		create : function(beanDefinition){
+			var beanDefNormalizer = factory.BeanDefinition(container);
+			if(typeof beanDefinition === "string"){
+				beanDefinition = beanDefNormalizer.normalize({path:beanDefinition});
+			}
+			else if(!beanDefinition._normalized){
+				beanDefinition = beanDefNormalizer.normalize(beanDefinition);
+			}
+
 			var consturctor = container.utils.resolvePath(container, beanDefinition.path);
 			if(consturctor === undefined){
 				throw beanDefinition.path + " must be defined before referencing to it";
 			}
+			var getBean = this.getBean;
 			if(typeof consturctor === "function"){
 				var args = [];
 				var bdArgs = beanDefinition.args;
@@ -293,11 +325,29 @@ define.clazz("factory.BeanGenerator", function BeanGenerator(container){
 					var argBd = bdArgs[i];
 					args.push(getBean(argBd));
 				}
-				obj = consturctor.apply({},args);
+				var obj = consturctor.apply({},args);
 				if(obj === undefined){
 					throw "bean [" + beanDefinition.path + "] must not return null!";					
 				}
-				var properties = beanDefinition.property;
+				var injector = container.factory.Injector(container);
+				injector.inject(obj,beanDefinition.property);
+				injector.mixin(obj,beanDefinition.mixin);				
+				return obj;
+			}
+			else if(typeof consturctor === "object"){
+				return consturctor;
+			}
+		}
+	};
+});
+
+define.clazz("factory.Injector",function InnerInjector(container){
+	container.factory.Injector = function Injector(){
+		return{
+			inject : function(obj,properties){
+				var getBean = container.factory.BeanGenerator(container).getBean;
+				var beanDefNormalizer = container.factory.BeanDefinition(container);
+				properties = beanDefNormalizer.normalizeProperty(properties);
 				for(var name in properties){
 					var property = properties[name];
 					var propBean = getBean(property);
@@ -309,18 +359,21 @@ define.clazz("factory.BeanGenerator", function BeanGenerator(container){
 						obj[name] = propBean;
 					}
 				}
-				var mixins = beanDefinition.mixin;
+				return obj;
+			},
+			mixin : function mixin(obj,mixins){
+				var getBean = container.factory.BeanGenerator(container).getBean;
+				var beanDefNormalizer = container.factory.BeanDefinition(container);
+				mixins = beanDefNormalizer.normalizeMixin(mixins);
 				for(var name in mixins){
 					var mixinee = getBean(mixins[name]);
 					container.utils.merge(mixinee,obj);
 				}
 				return obj;
 			}
-			else if(typeof consturctor === "object"){
-				return consturctor;
-			}
-		}
+		};
 	};
+	return container.factory.Injector();	
 });
 
 define.module("aop", function aop(m,container){
@@ -362,10 +415,10 @@ define.module("aop", function aop(m,container){
 				intercept : function(obj, advice){
 					for(var name in obj){
 						if(typeof obj[name] === 'function'){
-							var proxied = makeProxy(name, obj[name], advice);
-							obj[name] = proxied;
+							obj[name] = makeProxy(name, obj[name], advice);
 						}
 					}
+					return obj;
 				}
 			};
 		},

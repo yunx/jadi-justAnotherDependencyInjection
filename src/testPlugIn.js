@@ -136,15 +136,14 @@ exports.jadiTest = function(jadiInstance){
 				if(utils.isString(contextFile)){
 					var filePath = require('path').resolve(contextFiles[i]);
 					var beanDefinitions = require(filePath).beanDefinitions;
-					jadi.nodeBeans(beanDefinitions);
 				}
 				else if(contextFile.path !== undefined){
-					var beanDefinitions = jadi.declareBeans(contextFile);
+					var beanDefinitions = [contextFile];
 				}				
 				for(var j=0; j < beanDefinitions.length; j++){
 					var beanDefinition = beanDefinitions[j];
 					if(beanDefinition.testSuit !== undefined){
-						var testCase = jadi.getBean(beanDefinition.id);
+						var testCase = jadi.newInstance(beanDefinition);
 						jadiTest.addCase(beanDefinition.testSuit, beanDefinition.path, testCase);
 					}					
 				}
