@@ -118,7 +118,7 @@ exports.jadiTest = function(jadiInstance){
 					}
 				}
 				return testResults;
-			}			
+			}
 		};
 	});
 	
