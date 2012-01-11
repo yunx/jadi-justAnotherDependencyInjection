@@ -2,13 +2,24 @@
 
 var jadiTest = require("../src/testPlugIn.js").jadiTest();
 
+jadiTest.declareBeans({
+	id : "jadiUtils",
+	path : "./jadiTest@SomeTest"
+});
+
 jadiTest.run({
 	path : "./jadiTest@SomeTest",
-	testSuit : "Sometest",
-	scope : "p"
-},
-{
-	path : "./jadiTest@SomeTest",
-	testSuit : "Some test Else",
-	scope : "p"
+	args : ["path:jadi.utils","strs"],
+	property : {
+		utils : "path:jadi.utils",
+		str : "someStr",
+		id : "id:jadiUtils"
+	},
+	scope : "p",
+	test : {
+		suite : "Bean definition test suit",
+		injectMethods : {
+			jadiTestParameterPassing : ["path:jadi.utils"]
+		}
+	}	
 });

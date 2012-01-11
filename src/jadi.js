@@ -11,7 +11,7 @@ var define = (function createContainer(){
 		},
 		assertDeclaration : function (item, name){
 			if(item !== undefined){
-				throw name+" already declared!"
+				throw new Error(name+" already declared!");
 			}
 		},
 		merge : function(src, des, soft){
@@ -47,7 +47,7 @@ var define = (function createContainer(){
 		return {
 			bind : function(target, name, property){
 				if(target[name] !== undefined){
-					throw target + "["+name+"] already exist! Cannot bind to this name space!";
+					throw new Error(target + "["+name+"] already exist! Cannot bind to this name space!");
 				}
 				if(name !== undefined && property !== undefined){
 					target[name] = input[property];
@@ -140,12 +140,12 @@ define.module("jadi.utils", function utils(module){
 	};
 });
 
-define.clazz("jadi.factory.BeanDefinition", function BeanDefinition(jadi){
+define.module("jadi.factory", function factory(m,jadi){
+m.BeanDefinition = function BeanDefinition(){
 	var EMPTY_ARRAY = [];
 	var EMPTY_PROPERTY = {};
 	
 	var utils = jadi.utils;
-	
 	function ParseProperty(prop){
 		if(prop === undefined){
 			return undefined;
@@ -155,7 +155,7 @@ define.clazz("jadi.factory.BeanDefinition", function BeanDefinition(jadi){
 		}
 		if(utils.isObject(prop)){
 			if("path" in prop){
-				beanDef = BeanDefinition(prop,utils);
+				beanDef = BeanDefinition().normalize(prop);
 				beanDef.scope = "prototype";
 				return beanDef;
 			}
@@ -164,7 +164,9 @@ define.clazz("jadi.factory.BeanDefinition", function BeanDefinition(jadi){
 		if(utils.isString(prop)){
 			var parsed = utils.parseColon(prop);
 			if(parsed && parsed.prefix === "path"){
-				return parsed.subfix;
+				beanDef = BeanDefinition().normalize({path:parsed.subfix});
+				beanDef.scope = "prototype";
+				return beanDef;
 			}
 			return prop;
 		}
@@ -202,19 +204,7 @@ define.clazz("jadi.factory.BeanDefinition", function BeanDefinition(jadi){
 			return tbr;
 		}
 	}
-	var normalizedFlag = "_normalize";
-	var normalizedAdvice = function(methodName, fn){
-		return function(arg){			
-			if(arg[normalizedFlag]){
-				return arg;
-			}
-			var result = fn(arg);
-			result[normalizedFlag] = true;
-			return result;
-		};
-	};
-	
-	return jadi.aop.Interceptor().intercept({
+	return {
 		normalize : function(bd){
 			var tbr = {
 					path : bd.path,
@@ -239,7 +229,8 @@ define.clazz("jadi.factory.BeanDefinition", function BeanDefinition(jadi){
 		normalizeMixin : function(mixin){
 			return Arg(mixin);
 		}
-	}, normalizedAdvice);
+	};
+}	
 });
 
 define.module("jadi.factory.mapping", function mapping(module,jadi){
@@ -253,15 +244,15 @@ define.module("jadi.factory.mapping", function mapping(module,jadi){
 				arguments = arguments[0]
 			}			
 			var beanDefLength = arguments.length;
-			var defNormalizer = jadi.factory.BeanDefinition(jadi);
+			var defNormalizer = jadi.factory.BeanDefinition();
 			for(var i=0; i < beanDefLength; i++){
 				var beanDefinition = arguments[i];
 				var id = beanDefinition.id;
 				if(id === undefined){
-					throw beanDefinition +" must specify an id.";
+					throw new Error(beanDefinition +" must specify an id.");
 				}
 				var exist = mapping[id];
-				if(exist !== undefined){ throw "bean : [" +id+"] already existed"};
+				if(exist !== undefined){ throw new Error("bean : [" +id+"] already existed")};
 				mapping[id] = defNormalizer.normalize(beanDefinition);
 			}			
 			return this;
@@ -276,7 +267,6 @@ define.clazz("jadi.factory.BeanGenerator", function BeanGenerator(jadi){
 	var factory = jadi.factory;
 	return {
 		getBean : function(argBd){
-			var thisCreate = this.create;
 			if(typeof argBd === "string"){
 				var parsed = jadi.utils.parseColon(argBd);
 				if(parsed){
@@ -284,7 +274,7 @@ define.clazz("jadi.factory.BeanGenerator", function BeanGenerator(jadi){
 						return factory.getBean(parsed.subfix);
 					}
 					if(parsed.prefix === "path"){
-						return thisCreate(parsed.subfix);
+						return this.create(parsed.subfix);
 					}
 				}					
 			}
@@ -292,12 +282,12 @@ define.clazz("jadi.factory.BeanGenerator", function BeanGenerator(jadi){
 				return argBd;
 			}
 			if("path" in argBd){
-				return thisCreate(argBd);
+				return this.create(argBd);
 			}
 			if(jadi.utils.isArray(argBd)){
 				var arrayTbr = [];
 				for(var i=0; i<argBd.length; i++){
-					arrayTbr.push(getBean(argBd[i]));
+					arrayTbr.push(this.getBean(argBd[i]));
 				}
 				return arrayTbr;
 			}
@@ -306,29 +296,28 @@ define.clazz("jadi.factory.BeanGenerator", function BeanGenerator(jadi){
 			}
 		},
 		create : function(beanDefinition){
-			var beanDefNormalizer = factory.BeanDefinition(jadi);
+			var beanDefNormalizer = factory.BeanDefinition();
 			if(typeof beanDefinition === "string"){
 				beanDefinition = beanDefNormalizer.normalize({path:beanDefinition});
 			}
 			else if(!beanDefinition._normalized){
 				beanDefinition = beanDefNormalizer.normalize(beanDefinition);
 			}
-
 			var consturctor = jadi.utils.resolvePath(jadi.container, beanDefinition.path);
 			if(consturctor === undefined){
-				throw beanDefinition.path + " must be defined before referencing to it";
+				throw new Error(beanDefinition.path + " must be defined before referencing to it");
 			}
-			var getBean = this.getBean;
+
 			if(typeof consturctor === "function"){
 				var args = [];
 				var bdArgs = beanDefinition.args;
 				for(var i=0; i< bdArgs.length; i++){
 					var argBd = bdArgs[i];
-					args.push(getBean(argBd));
+					args.push(this.getBean(argBd));
 				}
 				var obj = consturctor.apply({},args);
 				if(obj === undefined){
-					throw "bean [" + beanDefinition.path + "] must not return null!";					
+					throw new Error("bean [" + beanDefinition.path + "] must not return null!");					
 				}
 				var injector = jadi.factory.Injector(jadi);
 				injector.inject(obj,beanDefinition.property);
@@ -342,16 +331,17 @@ define.clazz("jadi.factory.BeanGenerator", function BeanGenerator(jadi){
 	};
 });
 
-define.clazz("jadi.factory.Injector",function InnerInjector(jadi){
-	jadi.factory.Injector = function Injector(){
+define.module("jadi.factory",function InnerInjector(m,jadi){
+	m.Injector = function Injector(){
 		return{
 			inject : function(obj,properties){
-				var getBean = jadi.factory.BeanGenerator(jadi).getBean;
-				var beanDefNormalizer = jadi.factory.BeanDefinition(jadi);
+				var beanGenerator = jadi.factory.BeanGenerator(jadi);
+				var beanDefNormalizer = jadi.factory.BeanDefinition();
 				properties = beanDefNormalizer.normalizeProperty(properties);
+				
 				for(var name in properties){
 					var property = properties[name];
-					var propBean = getBean(property);
+					var propBean = beanGenerator.getBean(property);
 					if(typeof obj[name] === "function"){
 						propBean = propBean.length !== undefined? propBean : [propBean];
 						obj[name].apply(obj,[propBean])
@@ -364,7 +354,7 @@ define.clazz("jadi.factory.Injector",function InnerInjector(jadi){
 			},
 			mixin : function mixin(obj,mixins){
 				var getBean = jadi.factory.BeanGenerator(jadi).getBean;
-				var beanDefNormalizer = jadi.factory.BeanDefinition(jadi);
+				var beanDefNormalizer = jadi.factory.BeanDefinition();
 				mixins = beanDefNormalizer.normalizeMixin(mixins);
 				for(var name in mixins){
 					var mixinee = getBean(mixins[name]);
@@ -374,7 +364,6 @@ define.clazz("jadi.factory.Injector",function InnerInjector(jadi){
 			}
 		};
 	};
-	return jadi.factory.Injector();	
 });
 
 define.module("jadi.aop", function aop(m,jadi){
@@ -414,6 +403,9 @@ define.module("jadi.aop", function aop(m,jadi){
 			}
 			return {
 				intercept : function(obj, advice){
+					if(obj === undefined){
+						throw new Error("cannot intercept undefined value!");
+					}
 					for(var name in obj){
 						if(typeof obj[name] === 'function'){
 							obj[name] = makeProxy(name, obj[name], advice);
@@ -464,7 +456,7 @@ define.module("jadi.factory", function factory(m, jadi){
 	return {
 		getBean : function(id){
 			var beanDefinition = jadi.factory.mapping.getBeanDefinition(id);
-			if(beanDefinition === undefined){ throw "bean : [" +id+"] has not been defined"};
+			if(beanDefinition === undefined){ throw new Error("bean : [" +id+"] has not been defined")};
 			return this.scope(beanDefinition.scope).get(id);
 		},
 		scope : scope,
