@@ -15,11 +15,12 @@ jadiTest.run({
 		str : "someStr",
 		id : "id:jadiUtils"
 	},
+	init : "initMethod",
 	scope : "p",
 	test : {
-		suite : "Bean definition test suit",
+		suite : "Bean definition test suite",
 		injectMethods : {
-			jadiTestParameterPassing : ["path:jadi.utils"]
+			testJadiTestParameterPassing : ["path:jadi.utils"]
 		}
 	}	
 });

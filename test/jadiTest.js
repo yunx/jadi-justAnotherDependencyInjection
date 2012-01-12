@@ -1,5 +1,6 @@
 "use strict";
-exports.SomeTest = function(utils,strs){	
+exports.SomeTest = function(utils,strs){
+	var inited = false;
 	var self = {
 		testOne : function(){
 			this.compare(1, "===", 1);
@@ -12,23 +13,29 @@ exports.SomeTest = function(utils,strs){
 			})
 			setTimeout(asynTest,1000);
 		},
-		jadiTestParameterPassing : function(val){
+		testJadiTestParameterPassing : function(val){
 			this.compare(val, "!==", undefined);
 		},
-		consturctorInjectionPath : function(){
+		testConsturctorInjectionPath : function(){
 			this.compare(utils, "!==", undefined);
 		},
-		consturctorInjectionStr : function(){
+		testConsturctorInjectionStr : function(){
 			this.compare(strs, "===" , "strs");
 		},
-		propertyInjectionPath : function(){
+		testPropertyInjectionPath : function(){
 			this.compare(self.utils, "===", utils);
 		},
-		propertyInjectionStr : function(){
+		testPropertyInjectionStr : function(){
 			this.compare(self.str, "===", "someStr");
 		},
-		propertyInjectionId : function(){
+		testPropertyInjectionId : function(){
 			this.compare(self.id, "!==", undefined);
+		},
+		testInitMethod : function (){
+			this.compare(inited, "===", true);
+		},
+		initMethod : function(){
+			inited = true;
 		}
 	};
 	return self;

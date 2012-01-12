@@ -97,8 +97,9 @@ exports.jadiTest = function(jadiInstance){
 			addCase : function(context, path, testCase){
 				var suiteName = context.suite || "default";
 				var methodParameters = injector.inject({},context.injectMethods);
-				var testCase = aop.intercept(testCase,function(methodName, method){
+				var testCase = aop.intercept(testCase,function(obj, methodName){
 					var parameters = methodParameters[methodName];
+					var method = obj[methodName];
 					if(parameters !== undefined){
 						return function(){
 							return method.apply(this,parameters);
@@ -121,6 +122,9 @@ exports.jadiTest = function(jadiInstance){
 						var testCase = suit[i]["case"];
 						var path = suit[i]["path"]
 						for(var name in testCase){
+							if(name === undefined || name.indexOf("test") !== 0){
+								continue;
+							}
 							var caseMethod = testCase[name];
 							if(utils.isFunction(caseMethod)){
 								var clazzName = path+"."+name;
@@ -146,7 +150,7 @@ exports.jadiTest = function(jadiInstance){
 		jadi.run = function(){
 			var jadiTest = jadi.newInstance({
 				path : "jadi.Test",
-				args : [utils, "path:jadi.factory.Injector", "path:jadi.aop.Interceptor"]
+				args : [utils, "path:jadi.factory.injector", "path:jadi.aop.Interceptor"]
 			});
 			var contextFiles = arguments;
 			for(var i=0; i < contextFiles.length; i++){
