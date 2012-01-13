@@ -1,98 +1,97 @@
-exports.jadiTest = function(jadiInstance){
+exports.jadiTest = function (jadiInstance){
 	var jadi = require("./nodePlugIn.js").jadi;
 	jadi = jadiInstance || jadi();
 	
-	jadi.clazz("jadi.Test",function test(utils, injector, aop){
-		var suits = {};
+	jadi.clazz("jadi.test.Tester", function Tester(utils){
+		function doCompare(expected, operator, result){
+			switch(operator){
+				case "==="	:
+					return expected === result;
+				case "=="	:
+					return expected == result;
+				case "<"	:
+					return expected < result;
+				case "<="	:
+					return expected <= result;
+				case ">"	:
+					return expected > result;
+				case ">="	:
+					return expected >= result;
+				case "!="	:
+					return expected != result;
+				case "!=="	:
+					return expected !== result;
+				default :
+					throw operator + " not supported!"
+			}
+		}
+		var expectedException = undefined;			
+		var testResult = {
+			pass : undefined,
+			error : undefined
+		};
+		var started = 0;
+		var finished = 0;
+		return {
+			proxy : function proxy(fn){
+				var that = this;
+				started++;
+				return function(){
+					try{							
+						fn.apply(that,arguments);
+						testResult.pass = true;
+					}
+					catch(e){
+						if(!that.expectException(e)){
+							testResult.pass = false;
+						}
+						else{
+							testResult.pass = true;
+						}
+					}
+					finished++;
+				};					
+			},
+			compare : function(expected, operator, result, message){
+				var pass = doCompare(expected, operator, result);
+				if(!pass){
+					throw new Error(message || expected + " " + operator + " " + result + " is not true"); 
+				}
+			},
+			exception : function(e){
+				expectedException = e;
+			},
+			expectException : function(e){
+				if(expectedException === undefined){
+					testResult.error = e;
+					return false;
+				}
+				if(utils.isString(e)){
+					return e === expectedException;
+				}
+				if(utils.isObject(e)){
+					return e instanceof expectedException;
+				}
+				testResult.error = e;
+			},
+			getResultHolder : function(){
+				return function(){
+					if(started === finished){
+						return testResult;
+					}
+					return undefined;
+				}
+			}
+		};
+	});
+	
+	jadi.clazz("jadi.test.TestContext",function TestContext(utils, injector, aop){
+		var suites = {};
 		
 		var getCia = function getCreateIfAbsent(obj,name){
 			var val = obj[name] || (obj[name]=[]);
 			return val;
-		}		
-		
-		var jadiTester = function(suitName, path){
-			function doCompare(expected, operator, result){
-				switch(operator){
-					case "==="	:
-						return expected === result;
-					case "=="	:
-						return expected == result;
-					case "<"	:
-						return expected < result;
-					case "<="	:
-						return expected <= result;
-					case ">"	:
-						return expected > result;
-					case ">="	:
-						return expected >= result;
-					case "!="	:
-						return expected != result;
-					case "!=="	:
-						return expected !== result;
-					default :
-						throw operator + " not supported!"
-				}
-			}
-			var expectedException = undefined;			
-			var testResult = {
-				pass : undefined,
-				error : undefined
-			};
-			var started = 0;
-			var finished = 0;
-			return {
-				proxy : function proxy(fn){
-					var that = this;
-					started++;
-					return function(){
-						try{							
-							fn.apply(that,arguments);
-							testResult.pass = true;
-						}
-						catch(e){
-							if(!that.expectException(e)){
-								testResult.pass = false;
-							}
-							else{
-								testResult.pass = true;
-							}
-						}
-						finished++;
-					};					
-				},
-				compare : function(expected, operator, result, message){
-					var pass = doCompare(expected, operator, result);
-					if(!pass){
-						throw new Error(message || expected + " " + operator + " " + result + " is not true"); 
-					}
-				},
-				exception : function(e){
-					expectedException = e;
-				},
-				expectException : function(e){
-					if(expectedException === undefined){
-						testResult.error = e;
-						return false;
-					}
-					if(utils.isString(e)){
-						return e === expectedException;
-					}
-					if(utils.isObject(e)){
-						return e instanceof expectedException;
-					}
-					testResult.error = e;
-				},
-				getResultHolder : function(){
-					return function(){
-						if(started === finished){
-							return testResult;
-						}
-						return undefined;
-					}
-				}
-			};
-		};
-		
+		}
 		return {
 			addCase : function(context, path, testCase){
 				var suiteName = context.suite || "default";
@@ -108,16 +107,33 @@ exports.jadiTest = function(jadiInstance){
 					return method;
 				});
 
-				getCia(suits, suiteName).push({
+				getCia(suites, suiteName).push({
 					path : path,
 					"case" : testCase
 				});
 			},
-			run : function(){
+			getSuites : function(){
+				return suites;
+			}
+		};
+	});
+	
+	jadi.clazz("jadi.test.Executor", function Executor(utils, testerFactory, testContext){
+		
+		return {
+			addTestDefinitions : function(testDefinitions){
+				for(var name in testDefinitions){
+					var def = testDefinitions[name];
+					testContext.addCase(def.test, def.path, def.testCase);
+				}
+				return this;
+			},
+			executes : function(){
 				var testResults = {};
-				for(var sname in suits){
+				var suites = testContext.getSuites();
+				for(var sname in suites){
 					var results = testResults[sname] = [];
-					var suit = suits[sname];
+					var suit = suites[sname];
 					for(var i=0; i < suit.length; i++){
 						var testCase = suit[i]["case"];
 						var path = suit[i]["path"]
@@ -128,7 +144,7 @@ exports.jadiTest = function(jadiInstance){
 							var caseMethod = testCase[name];
 							if(utils.isFunction(caseMethod)){
 								var clazzName = path+"."+name;
-								var tester = jadiTester(sname,clazzName);
+								var tester = testerFactory.selfFactory.make();
 								tester.proxy(caseMethod)();
 								var holder = tester.getResultHolder();
 								results.push({
@@ -145,14 +161,9 @@ exports.jadiTest = function(jadiInstance){
 	});
 	
 	return jadi.plugIn(function(){
-		var utils = this.utils;
-		var container = this;
-		jadi.run = function(){
-			var jadiTest = jadi.newInstance({
-				path : "jadi.Test",
-				args : [utils, "path:jadi.factory.injector", "path:jadi.aop.Interceptor"]
-			});
-			var contextFiles = arguments;
+		
+		function toTestDefinitions(contextFiles){
+			var testContext = [];
 			for(var i=0; i < contextFiles.length; i++){
 				var contextFile = contextFiles[i];
 				if(utils.isString(contextFile)){
@@ -165,15 +176,36 @@ exports.jadiTest = function(jadiInstance){
 				for(var j=0; j < beanDefinitions.length; j++){
 					var beanDefinition = beanDefinitions[j];
 					if(beanDefinition.test !== undefined){
-						var testCase = jadi.newInstance(beanDefinition);
-						jadiTest.addCase(beanDefinition.test, beanDefinition.path, testCase);
+						testContext.push({
+							test : beanDefinition.test,
+							path : beanDefinition.path,
+							testCase : jadi.newInstance(beanDefinition)
+						});
 					}					
 				}
 			}
-			
+			return testContext;
+		}
+		
+		var utils = this.utils;
+		var container = this;
+		jadi.run = function(){
+			var testExecutor = jadi.newInstance({
+				path : "jadi.test.Executor",
+				args : [utils, {
+						path : "jadi.test.Tester",
+						args : [utils],
+						selfFactoryAware : true
+					}, 
+					{
+						path : "jadi.test.TestContext",
+						args : [utils, "path:jadi.factory.injector", "path:jadi.aop.Interceptor"]
+					}]
+			});
+			testExecutor.addTestDefinitions(toTestDefinitions(arguments));
 			var label = "Total Test Run Time";
 			console.time(label);
-			var results = jadiTest.run();
+			var results = testExecutor.executes();
 			
 			var intervalId = setInterval(function(){
 				for(var name in results){

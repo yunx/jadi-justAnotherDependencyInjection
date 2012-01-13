@@ -483,6 +483,17 @@ define.module("jadi.factory", function DefaultPostProductionProcedure(m, jadi){
 		}
 		throw new Error("object[" + utils.identity(bd) + "] does not have init method [" + bd.init +"]");
 	});
+	factory.registerP3(function factoryP3(bean, bd){
+		if(bd.selfFactoryAware){
+			bean.selfFactory = {
+				make : function(){
+					return factory.beanGenerator.createBean(bd);
+				}	
+			};
+			return bean;
+		}
+		return bean;
+	});
 });
 
 var jadi = {};
