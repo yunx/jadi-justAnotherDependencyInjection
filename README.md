@@ -7,7 +7,7 @@ Any api will likely to be changed. It is still in a very early stage of its life
 
 ==========API=DOCs======================
 
-//Defined a class:
+Defined a class:
 
 	jadi.clazz("clazz.full.Name", function(arg1, arg2){
 		//some fun details here
@@ -21,8 +21,9 @@ Any api will likely to be changed. It is still in a very early stage of its life
 		};
 	});
 
-//Define a module:
-//Example 1:
+Define a module:
+Example 1:
+
 	jadi.module("clazz.full",function(module){
 		module.SomeClazz = function(name,arg2){
 			return {
@@ -42,8 +43,9 @@ Any api will likely to be changed. It is still in a very early stage of its life
 		};
 	});
 
-//Example 2:
-//equivalent to example 1
+Example 2:
+equivalent to example 1
+
 	jadi.module("clazz.full",function(){
 		return {
 			SomeClazz = function(name,arg2){
@@ -62,7 +64,8 @@ Any api will likely to be changed. It is still in a very early stage of its life
 		};	
 	});
 
-//declare beans, or wiring beans
+declare beans, or wiring beans
+
 	jadi.declareBeans({
 		id : "nameCollector",
 		path : "clazz.full.Name",
@@ -76,13 +79,16 @@ Any api will likely to be changed. It is still in a very early stage of its life
 		args : "path:clazz.full.SomeOtherClazz"
 	});
 
-//retrive bean in any scope
+retrive bean in any scope
+
 	var nameCollector = jadi.getBean("nameCollector");
 
-//"new" up a object
+"new" up a object
+
 	jadi.newInstance("clazz.full.SomeOtherClazz");
 
-//scoped retrive
+scoped retrive
+
 	jadi.require(["nameCollector", "someObject"],
 	function(bean1, bean2){
 		//bean1 is bean nameCollector
