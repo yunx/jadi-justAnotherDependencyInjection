@@ -11,7 +11,7 @@ exports.SomeTest = function(utils,strs){
 				assertion.exception(Error);
 				throw new Error("error in asynTest");
 			})
-			setTimeout(asynTest,1000);
+			setTimeout(asynTest,200);
 		},
 		testJadiTestParameterPassing : function(val){
 			this.compare(val, "!==", undefined);
@@ -39,4 +39,15 @@ exports.SomeTest = function(utils,strs){
 		}
 	};
 	return self;
+}
+
+exports.Super = function(){
+	this.fromSuper = true;
+}
+
+exports.This = function(){
+	var self = this;
+	this.testInheritance = function(){
+		this.compare(self.fromSuper, "===", true);
+	}
 }

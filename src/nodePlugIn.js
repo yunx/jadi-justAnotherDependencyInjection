@@ -20,6 +20,9 @@ exports.jadi = function(jadiInstance){
 					var clazz = moduleClazz[1];
 					return require(abPath)[clazz];
 				}
+				else{
+					throw new Error(moduleClazz[0] + " not found");
+				}
 			}
 			return originalResolve(obj,path,parent);
 		};

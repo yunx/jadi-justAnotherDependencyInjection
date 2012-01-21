@@ -23,4 +23,12 @@ jadiTest.run({
 			testJadiTestParameterPassing : ["path:jadi.utils"]
 		}
 	}	
+},{
+	path : "./jadiTest@This",
+	extend:{
+		path : "./jadiTest@Super"
+	},
+	test : {
+		suite : "Bean definition test suite"
+	}
 });

@@ -1,9 +1,6 @@
 exports = exports || {};
 exports.jadi = function Jadi(){
-/**
-* NO more new keyword! All {}! NO more inheritance! All mixin!
-* Object constructor and function are the same! all are invokables.
-**/
+
 var define = (function createContainer(){
 	var utils = {
 		isModule : function(ending, contextType){
@@ -204,8 +201,18 @@ define.module("jadi.factory.beanDefinition", function BeanDefinition(m,jadi){
 	};
 	return {
 		normalize : function(bd){
+			if(bd === undefined){
+				return undefined;
+			}
+			bd.extend = this.normalize(bd.extend);
+			if(bd.extend !== undefined){
+				bd.newit = true;
+				bd.extend.newit = true;
+			}
 			var tbr = {
 					path : bd.path,
+					newit : Boolean(bd.newit),
+					extend : this.normalize(bd.extend),
 					scope: bd.scope,
 					args :  Arg(bd.args),
 					property : Property(bd.property),
@@ -260,6 +267,55 @@ define.module("jadi.factory.mapping", function Mapping(module,jadi){
 	};
 });
 
+define.module("jadi.factory.instantiation",function Instantiation(){
+	
+	function newitup(fn,args){
+		switch(args.length){
+			case 0: return new fn();
+			case 1: return new fn(args[0]);
+			case 2: return new fn(args[0],args[1]);
+			case 3: return new fn(args[0],args[1],args[2]);
+			case 4: return new fn(args[0],args[1],args[2],args[3]);
+			case 5: return new fn(args[0],args[1],args[2],args[3],args[4]);
+			case 6: return new fn(args[0],args[1],args[2],args[3],args[4],args[5]);
+			default : throw new Error("jadi current doesnot support more than 6 args!");
+		}		
+	}
+	
+	return {
+		construct : function(consturctor,args,bd){
+			if(bd.newit){
+				var instance = newitup(consturctor,args);
+				Object.defineProperty(instance,"constructor",{
+					value: consturctor,
+				    enumerable: false,
+				    writable: true,
+				    configurable: true				
+				});
+				return instance;
+			}
+			return consturctor.apply({},args);
+		},
+		inherit : function(constructor,superInstance){
+			if(superInstance === undefined){
+				return;
+			}
+			var superConstructor = superInstance.constructor;
+			if(superConstructor === undefined){
+				throw Error("super clazz is undefined!");
+			}
+			if(constructor.super_ !== undefined && constructor.super_ !== superConstructor){
+				throw Error(constructor + " already been extended");
+			}
+			if(constructor.super_ === superConstructor){
+				return;
+			}
+			constructor.super_ = superConstructor;
+			constructor.prototype = superInstance;
+		}
+	};	
+});
+
 define.module("jadi.factory.beanGenerator", function BeanGenerator(m,jadi){
 	var factory = jadi.factory;
 	return {
@@ -312,13 +368,17 @@ define.module("jadi.factory.beanGenerator", function BeanGenerator(m,jadi){
 					var argBd = bdArgs[i];
 					args.push(factory.beanGenerator.getBean(argBd));
 				}
-				var obj = consturctor.apply({},args);
+				if(beanDefinition.extend !== undefined){
+					var super_ = jadi.factory.beanGenerator.getBean(beanDefinition.extend);
+					factory.instantiation.inherit(consturctor,super_);
+				}
+				var obj = factory.instantiation.construct(consturctor,args,beanDefinition);
 				if(obj === undefined){
 					throw new Error("bean [" + beanDefinition.path + "] must not return null!");					
 				}
 				var injector = jadi.factory.injector;
 				injector.inject(obj,beanDefinition.property);
-				injector.mixin(obj,beanDefinition.mixin);				
+				injector.mixin(obj,beanDefinition.mixin);
 				return obj;
 			}
 			else if(typeof consturctor === "object"){
