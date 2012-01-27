@@ -49,6 +49,7 @@ exports.jadi = function(jadiInstance){
 						else{
 							var dispatcher = jadiInstance.newInstance(beanDefinitions[i]);
 						}
+						dispatcher.setBeanFactory(jadiInstance);
 						break;
 					}
 				}
