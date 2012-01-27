@@ -1,5 +1,8 @@
 =================================================
 Warning: some API changed, will update them sooon
+
+Working on a Ioc container backed web framework
+...good luck to myself  
 =================================================
 jadi Version : alpha
 
