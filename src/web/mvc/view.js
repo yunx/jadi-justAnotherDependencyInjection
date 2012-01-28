@@ -16,11 +16,22 @@ exports.TagLibs = function TagsLib(){
 		function execute(context,result){
 			var tobeExecuted = undefined;
 			var length = decisionFlow.length;
+			var valueResolver = context.valueResolver;
 			for(var i=0; i<length; i++){
 				var decision = decisionFlow[i];
-				if(decision.condition.apply({},decision.args)){
-					tobeExecuted = i;
-					break;
+				if(typeof decision.condition === 'function'){
+					if(decision.condition.apply({},decision.args)){
+						tobeExecuted = i;
+						break;
+					}
+				}
+				else{
+					var literalBoolean = valueResolver.forBoolean(decision.condition,context.scopes);
+					
+					if(literalBoolean == true){
+						tobeExecuted = i;
+						break;
+					}
 				}
 			}
 			var choice = executionChoice[tobeExecuted];
@@ -48,23 +59,34 @@ exports.TagLibs = function TagsLib(){
 			return {
 				Do : Do
 			};
-		}	
-		function Else(content, args){
-			var args = subArray(arguments,1);
-			decisionFlow.push({
-				condition : function(){return true},
-				args : []
-			});
-			executionChoice.push({
-				execution : content,
-				args : args
-			});
-			return {
-				execute : execute
-			};
+		}
+		
+		function Else(){
+			return ElseIf(function(){return true});
+		}
+		
+		var logicOperator = {
+			"==" : function(right){
+				
+			}
 		}
 		return {
 			Do : Do
+		};
+	}
+
+	var set = function(tobeset){
+		
+		return {
+			to : function(to,scope){
+				
+				return {
+					execute : function(context,result){
+						var setVar = context.valueResolver.prepare(tobeset)(context.scopes);
+						context.scopes.set(setVar,to,scope);
+					}
+				};
+			}
 		};
 	}
 	
@@ -72,15 +94,21 @@ exports.TagLibs = function TagsLib(){
 		return function(attrs, children){
 			return {
 				execute : function(context,result){
-					var refinedAttrs = context.attributeParser.interpolate(attrs,context.scopes);
+					var refinedAttrs = context.valueResolver.interpolate(attrs,context.scopes);
 					var combined = "";
 					for(var name in refinedAttrs){
-						combined += name+'="'+refinedAttrs[name]+'"'
+						var attrsVal =  refinedAttrs[name];
+						if(attrsVal.length !== 0){
+							combined += name+'="'+refinedAttrs[name]+'"'
+						}
 					}
 					result.push("<"+tagName+" "+combined+">");
 					if(children !== undefined){
 						if(typeof children === "object"){
 							context.viewHandler(children);
+						}
+						else if(typeof children === "string"){
+							result.push(children);
 						}
 					}
 					result.push("</"+tagName+">");
@@ -94,6 +122,7 @@ exports.TagLibs = function TagsLib(){
 		
 		var jadiTags = {
 			If : If,
+			set : set,
 			template : {
 				insert : function(definition){
 					return {
@@ -113,7 +142,7 @@ exports.TagLibs = function TagsLib(){
 	return tagLib();
 }
 
-exports.Evaluator = function(utils,tagLibs,attributeParser){	
+exports.Evaluator = function(utils,tagLibs,valueResolver){	
 	var handleArray = function(array, context, result){
 		for(var i=0; i<array.length; i++){
 			var val = array[i];
@@ -159,7 +188,7 @@ exports.Evaluator = function(utils,tagLibs,attributeParser){
 
 	return {
 		evaluate : function(view, context){
-			context.attributeParser = attributeParser;
+			context.valueResolver = valueResolver;
 			view = view(tagLibs);
 			var result = {
 				push : function(str){

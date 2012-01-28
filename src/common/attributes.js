@@ -1,9 +1,11 @@
-exports.Parser = function Parser(){
+exports.Resolver = function Resolver(){
 	
 	//id(dfd)
-	var attrMatcher = /[\w]+[(][\w\d\s#{}.\[\]_:;]*[)]/g;
+	var attrMatcher = /[\w]+[(][^()]*[)]/g;
 	
 	var interpolation = /[#][{][^#{}]*[}]/g;
+	
+	var logicInterpolation = / /;
 	
 	function scoped(point){
 		point = point.substring(2,point.length-1);
@@ -23,7 +25,7 @@ exports.Parser = function Parser(){
 			}
 			return normalized;
 		},
-		prepareInterpolation : function(str){
+		prepare : function(str){
 			var interpolatePoints = str.match(interpolation);
 			if(interpolatePoints === null){
 				return function(){
@@ -50,7 +52,7 @@ exports.Parser = function Parser(){
 				}
 				var further = interpolated.match(interpolation);
 				if(further !== null){
-					interpolated = that.prepareInterpolation(interpolated)(scopedContext);
+					interpolated = that.prepare(interpolated)(scopedContext);
 				}
 				return interpolated;
 			};
@@ -58,9 +60,15 @@ exports.Parser = function Parser(){
 		interpolate : function(attrs,scopedContext){
 			attrs = this.parse(attrs);
 			for(var name in attrs){
-				attrs[name] = this.prepareInterpolation(attrs[name])(scopedContext);
+				attrs[name] = this.prepare(attrs[name])(scopedContext);
 			}
 			return attrs;
+		},
+		forBoolean : function(val,scopedContext){
+			val = this.prepare(val)(scopedContext);
+			if(val == true){
+				return true;
+			}
 		}
 	}
 }

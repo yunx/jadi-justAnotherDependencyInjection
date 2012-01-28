@@ -133,6 +133,28 @@ define.module("jadi.utils", function utils(module){
 				return "path:" + bd.path;
 			}
 			return "anonymous bean";
+		},
+		compare : function doCompare(lhs, operator, rhs){
+			switch(operator){
+			case "==="	:
+				return lhs === rhs;
+			case "=="	:
+				return lhs == rhs;
+			case "<"	:
+				return lhs < rhs;
+			case "<="	:
+				return lhs <= rhs;
+			case ">"	:
+				return lhs > rhs;
+			case ">="	:
+				return lhs >= rhs;
+			case "!="	:
+				return lhs != rhs;
+			case "!=="	:
+				return lhs !== rhs;
+			default :
+				throw operator + " not supported!"
+			}
 		}
 	};
 });

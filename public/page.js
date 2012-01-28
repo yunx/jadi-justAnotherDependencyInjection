@@ -6,13 +6,16 @@ exports.template = function mainTemplate(tagLib){
 				link("rel(stylesheet) type(text/css) href(/public/style.css)")
 			],
 			body : [
-				If(function(){return false;})
-				.Do(div,"id(coolDiv) class(coolClass) style()","hello")
+				If("#{mode}")['===']("tests")
+					.Do(div,"id(coolDiv) class(coolClass) style()","hello2")
 				.ElseIf(function(){return false;})
-				.Do(div,"id(coolDiv) class(coolClass) style()","hello")
-				.Else(div,"id(coolDiv) class(#{test}) style()","hello")
+					.Do(div,"id(coolDiv) class(coolClass) style()","hello")
+				.Else()
+					.Do(div,"id(coolDiv) class(#{test}) style()","hello")
 				,div("class(#{test})", template.insert("something"))
-			]			
+				,set("hi").to("thing")
+				,input("type(button) value(#{thing})")
+			]
 		}
 	};
 }

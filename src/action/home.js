@@ -5,6 +5,7 @@ exports.HomeAction = function(){
 			
 			render("success");
 		},
-		test : "hell yeah!"
+		test : "hell yeah!",
+		mode : "view"
 	}	
 }

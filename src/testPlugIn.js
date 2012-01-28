@@ -3,28 +3,6 @@ exports.jadiTest = function (jadiInstance){
 	jadi = jadiInstance || jadi();
 	
 	jadi.clazz("jadi.test.Tester", function Tester(utils){
-		function doCompare(expected, operator, result){
-			switch(operator){
-				case "==="	:
-					return expected === result;
-				case "=="	:
-					return expected == result;
-				case "<"	:
-					return expected < result;
-				case "<="	:
-					return expected <= result;
-				case ">"	:
-					return expected > result;
-				case ">="	:
-					return expected >= result;
-				case "!="	:
-					return expected != result;
-				case "!=="	:
-					return expected !== result;
-				default :
-					throw operator + " not supported!"
-			}
-		}
 		var expectedException = undefined;			
 		var testResult = {
 			pass : undefined,
@@ -53,7 +31,7 @@ exports.jadiTest = function (jadiInstance){
 				};					
 			},
 			compare : function(expected, operator, result, message){
-				var pass = doCompare(expected, operator, result);
+				var pass = utils.compare(expected, operator, result);
 				if(!pass){
 					throw new Error(message || expected + " " + operator + " " + result + " is not true"); 
 				}

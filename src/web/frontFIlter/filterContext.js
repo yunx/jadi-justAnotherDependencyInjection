@@ -34,13 +34,29 @@ function ScopedContext(app,session,action){
 		get : function(str){
 			var splited = str.split(".");
 			var scopedObject = determineScope(splited[0]);
-			for(var i=0; i<splited.length; i++){
+			for(var i=0; i < splited.length; i++){
 				scopedObject = scopedObject[splited[i]];
 				if(scopedObject === undefined){
 					return undefined;
 				}
 			}
 			return scopedObject;
+		},
+		set : function(val, to, type){
+			type = type || '#page';
+			if(type[0] !== '#'){
+				type = '#'+type;
+			}
+			var scope = prefixed[type];
+			var splited = to.split(".");
+			for(var i=0; i<splited.length-1; i++){
+				var obj = scope[splited[i]];
+				if(obj === undefined){
+					scope[splited[i]] = obj = {};
+				}
+				scope =  obj;
+			}
+			scope[splited[splited.length-1]] = val;
 		}
 	}	
 }
@@ -48,8 +64,8 @@ function ScopedContext(app,session,action){
 function DefaultViewRenderer(utils){
 	var sandbox = require("./../../common/sandbox.js").GlobalBinder();
 	var tagLibs = require("./../mvc/view.js").TagLibs();
-	var attributeParser = require("./../../common/attributes.js").Parser();
-	var viewEvaluator = require("./../mvc/view.js").Evaluator(utils,tagLibs,attributeParser);	
+	var valueResolver = require("./../../common/attributes.js").Resolver();
+	var viewEvaluator = require("./../mvc/view.js").Evaluator(utils,tagLibs,valueResolver);	
 	
 	function loadJadiView(view){
 		return sandbox.loadView(view,tagLibs);
