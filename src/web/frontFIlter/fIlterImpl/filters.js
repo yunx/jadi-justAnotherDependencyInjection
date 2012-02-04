@@ -128,12 +128,34 @@ exports.AuthenticationFilter = function(authenticator, failureHandler){
 }
 
 exports.ActionInvocationFiler = function(){
+	
+	function render(request, response, filterChain){
+		var action = request.context.actionInfo.action;
+		var method = request.context.actionInfo.method;
+		method = action[method];
+		method.apply(action,[response.context.render]);		
+	}
+	
+	function bind(data, scope){
+		for(var name in data){
+			scope.set(data[name],name,"action");
+		}
+	}
+	
+	var querystring = require("querystring");
+	
 	return {
 		invoke : function(request, response, filterChain){			
-			var action = request.context.actionInfo.action;
-			var method = request.context.actionInfo.method;
-			method = action[method];
-			method.apply(action,[response.context.render]);
+			request.headers;
+			if(request.method === "GET"){
+				render(request, response, filterChain);
+				return;
+			}
+			request.setEncoding("utf8");
+			request.on("data",function(data){
+				bind(querystring.parse(data),request.context.scopes);
+				render(request, response, filterChain);
+			});			
 		}
 	};
 }

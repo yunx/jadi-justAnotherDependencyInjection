@@ -1,11 +1,11 @@
 exports.HomeAction = function(){
 	
 	return {
-		input : function(render){
-			
+		input : function(render){			
 			render("success");
 		},
 		test : "hell yeah!",
-		mode : "view"
-	}	
+		mode : "view",
+		name : "hi"
+	}
 }

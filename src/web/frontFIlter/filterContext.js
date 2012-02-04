@@ -64,7 +64,7 @@ function ScopedContext(app,session,action){
 function DefaultViewRenderer(utils){
 	var sandbox = require("./../../common/sandbox.js").GlobalBinder();
 	var tagLibs = require("./../mvc/view.js").TagLibs();
-	var valueResolver = require("./../../common/attributes.js").Resolver();
+	var valueResolver = require("./../../common/attributes.js").AttributeParser();
 	var viewEvaluator = require("./../mvc/view.js").Evaluator(utils,tagLibs,valueResolver);	
 	
 	function loadJadiView(view){
@@ -135,8 +135,12 @@ exports.Dispatcher = function(actionMapping, utils){
 				if(request.context !== undefined){
 					throw new Error("request already has context defined! consider refactor.");
 				}
+				
+				var scopedContext = ScopedContext({},{},action);
+				
 				request.context = {
-					actionInfo : actionInfo
+					actionInfo : actionInfo,
+					scopes : scopedContext
 				};
 				response.context = {
 					render : function(result){
@@ -147,7 +151,7 @@ exports.Dispatcher = function(actionMapping, utils){
 						viewRenderer.render(view,{
 							request : request,
 							response : response,
-							scopes : ScopedContext({},{},action)
+							scopes : scopedContext
 						});
 					}
 				};

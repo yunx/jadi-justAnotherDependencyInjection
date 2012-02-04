@@ -5,27 +5,28 @@ exports.template = function mainTemplate(tagLib){
 			head : [
 				link("rel(stylesheet) type(text/css) href(/public/style.css)")
 			],
-			body : [
-				If("#{mode}")['===']("tests")
-					.Do(div,"id(coolDiv) class(coolClass) style()","hello2")
-				.ElseIf(function(){return false;})
-					.Do(div,"id(coolDiv) class(coolClass) style()","hello")
-				.Else()
-					.Do(div,"id(coolDiv) class(#{test}) style()","hello")
-				,div("class(#{test})", template.insert("something"))
-				,set("hi").to("thing")
-				,input("type(button) value(#{thing})")
+			body : [     
+			    form("method(post)", [
+						If("#{mode}")['===']("tests")
+							.Do(div,"id(coolDiv) class(coolClass ) style()","hello 1")
+						.ElseIf("soething")["==="]("soething1")
+							.Do(div,"id(coolDiv) class(coolClass) style()","hello 2")
+						.Else()
+							.Do(div,"id(coolDiv) class(#{test}) style()","hello 3")
+						,template.insert("something")
+						,set("hi").to("thing")
+						,input("type(submit) value(Submit)")
+					])
 			]
 		}
 	};
 }
 
 exports.page = function page(tagLib){
-
 	return {
 		use : "./public/page@template",
 		something : [
-		    input("id(someInput) class(someInputClass) value(something)")
+		    textField("id(someInput) class(someInputClass) name(name)")
 		]
 	};
 }
