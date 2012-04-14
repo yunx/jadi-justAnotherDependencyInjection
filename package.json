@@ -1,0 +1,10 @@
+{
+  "name": "jadi",
+  "description": "ioc container",
+  "version": "alpha",
+  "author": "yunx <yunxdev@gmail.com>",
+  "keywords": ["jadi", "ioc", "container"],
+  "repository": "git://github.com/yunx/jadi-justAnotherDependencyInjection.git",
+  "main": "./src/nodePlugin.js",
+  "engines": { "node":">= 0.6.14" }
+}
