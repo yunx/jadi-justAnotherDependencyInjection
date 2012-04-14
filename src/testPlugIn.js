@@ -1,5 +1,5 @@
 exports.jadiTest = function (jadiInstance){
-	var jadi = require("./nodePlugIn.js").jadi;
+	var jadi = require("./nodePlugIn.js").newInstance;
 	jadi = jadiInstance || jadi();
 	
 	jadi.clazz("jadi.test.Tester", function Tester(utils){

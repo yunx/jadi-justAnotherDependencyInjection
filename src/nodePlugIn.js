@@ -1,6 +1,6 @@
 "use strict";
 var jadi = require("./jadi.js").jadi;
-exports.jadi = function(jadiInstance){
+exports.newInstance = function(jadiInstance){
 	
 	jadiInstance = jadiInstance || jadi();
 	
@@ -36,9 +36,7 @@ exports.jadi = function(jadiInstance){
 			mapping.addBeanDefinition.apply(mapping, definitions);
 		};		
 		
-		
-		//http server
-		jadiInstance.createServer = function(configFiles){
+		jadiInstance.load = function(configFiles){
 			for(var i=0; i<configFiles.length; i++){
 				var filePath = pathUtil.resolve(configFiles[i]);
 				var beanDefinitions = require(filePath).beanDefinitions;
@@ -59,9 +57,9 @@ exports.jadi = function(jadiInstance){
 					throw "need to define a dispatcher";
 				}
 			}
-			var server=  require("http").createServer(dispatcher.start);
-			return server;
-		}		
+			return dispatcher;
+		}
+		
 		return jadiInstance;
 	});
 }

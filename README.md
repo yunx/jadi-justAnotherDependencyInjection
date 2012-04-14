@@ -1,8 +1,3 @@
-=================================================
-Warning: some API changed, will update them sooon
-Working on a Ioc container backed web framework
-...good luck to myself  
-=================================================
 jadi Version : alpha
 
 Any api will likely to be changed. It is still in a very early stage of its life : ), so there are lots of room to improve.
@@ -96,3 +91,52 @@ scoped retrive
 		//bean1 is bean nameCollector
 		//bean2 is bean someObjecct
 	});
+
+=============node plugIN=====================
+
+files
+./Run.js
+./resource.js
+./src/foo.js
+
+foo.js
+
+	exports.dispatcher = function(bar){
+		
+		return {
+			listen : function(request, response){
+				bar.up();
+			}
+		};
+	};
+
+	exports.bar = function(bor){
+		var barCounter = 0;
+		return {
+			up : function(){
+				barCounter++;
+				console.log(this.sepcialName + " has counts: " + barCounter);
+			}
+		};
+	};
+
+resource.js:
+
+	exports.beanDefinitions [
+	{
+		dispatcher : true,
+		path : "./src/foo@dispatcher"
+	},
+	{
+		id : "bar",
+		path : "./src/foo@bar",
+		scope : "s",
+		args : ["id:someObject","path:clazz.full.SomeOtherClazz"],
+		property : {sepcialName: "not very special"}
+	}]
+
+Run.js:
+
+	var jadi = require('jadi').newInstance()
+	var dispatcher = jadi.load(["./resource.js"]);
+	require("http").createServer(dispatcher.listen);
