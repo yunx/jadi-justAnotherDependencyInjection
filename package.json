@@ -1,7 +1,7 @@
 {
   "name": "jadi",
   "description": "ioc container",
-  "version": "0.0.4-beta",
+  "version": "0.0.1-beta",
   "author": "yunx <yunxdev@gmail.com>",
   "keywords": ["jadi", "ioc", "container"],
   "repository": "git://github.com/yunx/jadi-justAnotherDependencyInjection.git",

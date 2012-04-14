@@ -574,6 +574,16 @@ define.module("jadi.factory", function DefaultPostProductionProcedure(m, jadi){
 			};
 			return bean;
 		}
+		if(bd.beanFactoryAware){
+			if(bean.setBeanFactory === undefined){
+				throw new Error("bean[" + utils.identity(bd) + "] does not have method [setBeanFactory]");
+			}
+			bean.setBeanFactory({
+				getBean : function(id){
+					return factory.getBean(id);
+				}
+			});
+		}
 		return bean;
 	});
 });

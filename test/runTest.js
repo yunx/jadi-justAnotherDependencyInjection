@@ -32,8 +32,12 @@ jadiTest.run({
 		suite : "Bean definition test suite"
 	}
 },{
+	beanFactoryAware : true,
 	path : "./jadiTestBean@",
 	test : {
-		suite : "Bean definition test suite"
+		suite : "Bean definition test suite",
+		injectMethods : {
+			testBeanFactoryAwareBeanRetrival : ["id:jadiUtils"]
+		}
 	}
 });
