@@ -31,4 +31,9 @@ jadiTest.run({
 	test : {
 		suite : "Bean definition test suite"
 	}
+},{
+	path : "./jadiTestBean@",
+	test : {
+		suite : "Bean definition test suite"
+	}
 });

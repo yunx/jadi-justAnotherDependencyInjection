@@ -18,6 +18,9 @@ exports.newInstance = function(jadiInstance){
 				}
 				if(pathUtil.existsSync(abPath)){
 					var clazz = moduleClazz[1];
+					if(clazz === ""){
+						return require(abPath);
+					}
 					return require(abPath)[clazz];
 				}
 				else{
