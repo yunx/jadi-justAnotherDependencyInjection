@@ -36,6 +36,8 @@ exports.jadi = function(jadiInstance){
 			mapping.addBeanDefinition.apply(mapping, definitions);
 		};		
 		
+		
+		//http server
 		jadiInstance.createServer = function(configFiles){
 			for(var i=0; i<configFiles.length; i++){
 				var filePath = pathUtil.resolve(configFiles[i]);
