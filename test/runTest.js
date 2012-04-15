@@ -1,6 +1,6 @@
 "use strict";
-
-var jadiTest = require("jaidTest").jadiTest();
+var jadiInstance = require("./../src/nodePlugIn.js").newInstance();
+var jadiTest = require("jadiTest").jadiTest(jadiInstance);
 
 jadiTest.declareBeans({
 	id : "jadiUtils",
@@ -9,7 +9,7 @@ jadiTest.declareBeans({
 
 jadiTest.run({
 	path : "./jadiTest@SomeTest",
-	args : ["path:jadi.utils","strs"],
+	args : [ "path:jadi.utils", "strs" ],
 	property : {
 		utils : "path:jadi.utils",
 		str : "someStr",
@@ -20,24 +20,24 @@ jadiTest.run({
 	test : {
 		suite : "Bean definition test suite",
 		injectMethods : {
-			testJadiTestParameterPassing : ["path:jadi.utils"]
+			testJadiTestParameterPassing : [ "path:jadi.utils" ]
 		}
-	}	
-},{
+	}
+}, {
 	path : "./jadiTest@This",
-	extend:{
+	extend : {
 		path : "./jadiTest@Super"
 	},
 	test : {
 		suite : "Bean definition test suite"
 	}
-},{
+}, {
 	beanFactoryAware : true,
 	path : "./jadiTestBean@",
 	test : {
 		suite : "Bean definition test suite",
 		injectMethods : {
-			testBeanFactoryAwareBeanRetrival : ["id:jadiUtils"]
+			testBeanFactoryAwareBeanRetrival : [ "id:jadiUtils" ]
 		}
 	}
 });
