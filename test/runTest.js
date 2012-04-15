@@ -1,6 +1,6 @@
 "use strict";
 
-var jadiTest = require("../src/testPlugIn.js").jadiTest();
+var jadiTest = require("jaidTest").jadiTest();
 
 jadiTest.declareBeans({
 	id : "jadiUtils",

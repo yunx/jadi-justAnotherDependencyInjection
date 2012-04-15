@@ -6,5 +6,8 @@
   "keywords": ["jadi", "ioc", "container"],
   "repository": "git://github.com/yunx/jadi-justAnotherDependencyInjection.git",
   "main": "./src/nodePlugIn.js",
+  "devDependencies": {
+    "jadiTest": "*"
+  },
   "engines": { "node":">= 0.6.14" }
 }
