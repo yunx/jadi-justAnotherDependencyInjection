@@ -44,21 +44,21 @@ exports.newInstance = function(jadiInstance){
 				var filePath = pathUtil.resolve(configFiles[i]);
 				var beanDefinitions = require(filePath).beanDefinitions;
 				jadiInstance.nodeBeans(beanDefinitions);
-				for(var i=0; i<beanDefinitions.length; i++){
-					if(beanDefinitions[i].dispatcher){
-						if(beanDefinitions[i].id !==  undefined){
-							var dispatcher = jadiInstance.getBean(beanDefinitions[i].id);
+				for(var j=0; j<beanDefinitions.length; j++){
+					if(beanDefinitions[j].dispatcher){
+						if(beanDefinitions[j].id !==  undefined){
+							var dispatcher = jadiInstance.getBean(beanDefinitions[j].id);
 						}
 						else{
-							var dispatcher = jadiInstance.newInstance(beanDefinitions[i]);
+							var dispatcher = jadiInstance.newInstance(beanDefinitions[j]);
 						}
 						dispatcher.setBeanFactory(jadiInstance);
 						break;
 					}
 				}
-				if(dispatcher === undefined){
-					throw "need to define a dispatcher";
-				}
+			}
+			if(dispatcher === undefined){
+				throw "need to define a dispatcher";
 			}
 			return dispatcher;
 		}
