@@ -30,13 +30,14 @@ exports.newInstance = function(jadiInstance){
 			return originalResolve(obj,path,parent);
 		};
 		
-		jadiInstance.nodeBeans = function(){
+		jadiInstance.nodeBeans = function(){			
 			var mapping = container.factory.mapping;
 			var definitions = [];
 			for(var i=0; i<arguments.length; i++){
 				definitions.push(arguments[i]);
 			}
 			mapping.addBeanDefinition.apply(mapping, definitions);
+			container.factory.loadEagerBeans();
 		};		
 		
 		jadiInstance.load = function(configFiles){
@@ -60,6 +61,7 @@ exports.newInstance = function(jadiInstance){
 			if(dispatcher === undefined){
 				throw "need to define a dispatcher";
 			}
+			container.factory.loadEagerBeans();
 			return dispatcher;
 		}
 		

@@ -16,6 +16,13 @@ module.exports = function exportClazz(){
 			this.compare(externalObj,"!==",undefined);
 			this.compare(externalObj.pass,"===",true);
 		},
+		testEagerBean : function(eagerBean){
+			this.compare(eagerBean.counter(), "===", 2);
+		},
+		testBeanScope : function(bean1, bean2){
+			this.compare(bean1, "!==", bean2);
+			this.compare(bean1.equals(bean2), "===", true);
+		},
 		setBeanFactory : function(_factory){
 			factory = _factory;
 		}

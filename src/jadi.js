@@ -239,7 +239,8 @@ define.module("jadi.factory.beanDefinition", function BeanDefinition(m,jadi){
 					scope: bd.scope,
 					args :  Arg(bd.args),
 					property : Property(bd.property),
-					mixin : Arg(bd.mixin)
+					mixin : Arg(bd.mixin),
+					eager : (bd.eager === undefined ? false : bd.eager)
 				};
 			for(var name in bd){
 				if(!(name in tbr)){			
@@ -262,6 +263,7 @@ define.module("jadi.factory.beanDefinition", function BeanDefinition(m,jadi){
 
 define.module("jadi.factory.mapping", function Mapping(module,jadi){
 	var mapping = {};
+	var eagerBeans = [];
 	return {
 		getBeanDefinition : function(id){
 			return mapping[id];
@@ -281,11 +283,19 @@ define.module("jadi.factory.mapping", function Mapping(module,jadi){
 				var exist = mapping[id];
 				if(exist !== undefined){ throw new Error("bean : [" +id+"] already existed")};
 				mapping[id] = defNormalizer.normalize(beanDefinition);
+				if(mapping[id].eager){
+					eagerBeans.push(id);
+				}				
 			}			
 			return this;
 		},
 		get : function(id){
 			return mapping[id];
+		},
+		getEagerBeans : function(){
+			var tbr = eagerBeans;
+			eagerBeans = [];
+			return tbr;
 		}
 	};
 });
@@ -552,6 +562,12 @@ define.module("jadi.factory", function Factory(m, jadi){
 		scope : scope,
 		registerP3 : function(fn){
 			jadi.aop.p3Advice.addProcedure(fn);			
+		},
+		loadEagerBeans : function(){
+			var ids = jadi.factory.mapping.getEagerBeans();
+			for(var i=0; i<ids.length; i++){
+				this.getBean(ids[i]);
+			}
 		}
 	};
 });
@@ -609,6 +625,7 @@ define.module("jadi.publicInterface", function PublicInterface(m, jadi){
 				definitions.push(arguments[i]);
 			}
 			mapping.addBeanDefinition.apply(mapping, definitions);
+			jadi.factory.loadEagerBeans();
 			return definitions;
 		},
 		getBean : function(id){

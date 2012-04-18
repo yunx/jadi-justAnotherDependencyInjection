@@ -11,6 +11,16 @@ jadiTest.declareBeans({
 		this.pass = true;
 	},
 	newit : true
+},
+{
+	id : "eagerBean",
+	path : "./beans@Eager",
+	eager : true,
+	scope : "p"
+},{
+	id : "equalityBean",
+	path : "./beans@Equality",
+	scope : "p"	
 });
 
 jadiTest.run({
@@ -39,12 +49,14 @@ jadiTest.run({
 	}
 }, {
 	beanFactoryAware : true,
-	path : "./jadiTestBean@",
+	path : "./jadiBeanTest@",
 	test : {
 		suite : "Bean definition test suite",
 		injectMethods : {
 			testBeanFactoryAwareBeanRetrival : [ "id:jadiUtils" ],
-			testExternalConsturtor : ["id:externalConstrutorTest"]
+			testExternalConsturtor : ["id:externalConstrutorTest"],
+			testEagerBean : ["id:eagerBean"],
+			testBeanScope : ["id:equalityBean","id:equalityBean"]
 		}
 	}
 });
