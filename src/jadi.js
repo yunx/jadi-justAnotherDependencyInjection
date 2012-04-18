@@ -233,6 +233,7 @@ define.module("jadi.factory.beanDefinition", function BeanDefinition(m,jadi){
 			}
 			var tbr = {
 					path : bd.path,
+					constructor : bd.func,
 					newit : Boolean(bd.newit),
 					extend : this.normalize(bd.extend),
 					scope: bd.scope,
@@ -378,7 +379,10 @@ define.module("jadi.factory.beanGenerator", function BeanGenerator(m,jadi){
 			else if(!beanDefinition._normalized){
 				beanDefinition = beanDefNormalizer.normalize(beanDefinition);
 			}
-			var consturctor = jadi.utils.resolvePath(jadi.container, beanDefinition.path);
+			var consturctor = beanDefinition.func;
+			if(consturctor === undefined){
+				consturctor = jadi.utils.resolvePath(jadi.container, beanDefinition.path);
+			}			
 			if(consturctor === undefined){
 				throw new Error(beanDefinition.path + " must be defined before referencing to it");
 			}

@@ -12,6 +12,10 @@ module.exports = function exportClazz(){
 		testBeanFactoryAwareBeanRetrival : function(jadiUtils){
 			this.compare(factory.getBean("jadiUtils"), "===", jadiUtils);
 		},
+		testExternalConsturtor : function(externalObj){
+			this.compare(externalObj,"!==",undefined);
+			this.compare(externalObj.pass,"===",true);
+		},
 		setBeanFactory : function(_factory){
 			factory = _factory;
 		}

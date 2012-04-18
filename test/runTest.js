@@ -5,6 +5,12 @@ var jadiTest = require("jadiTest").jadiTest(jadiInstance);
 jadiTest.declareBeans({
 	id : "jadiUtils",
 	path : "./jadiTest@SomeTest"
+},{
+	id : "externalConstrutorTest",
+	func : function(){
+		this.pass = true;
+	},
+	newit : true
 });
 
 jadiTest.run({
@@ -37,7 +43,8 @@ jadiTest.run({
 	test : {
 		suite : "Bean definition test suite",
 		injectMethods : {
-			testBeanFactoryAwareBeanRetrival : [ "id:jadiUtils" ]
+			testBeanFactoryAwareBeanRetrival : [ "id:jadiUtils" ],
+			testExternalConsturtor : ["id:externalConstrutorTest"]
 		}
 	}
 });
