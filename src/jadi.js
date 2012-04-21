@@ -1,3 +1,4 @@
+"use strict";
 exports = exports || {};
 exports.jadi = function Jadi(parent){
 
