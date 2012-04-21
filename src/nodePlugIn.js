@@ -2,7 +2,7 @@
 var jadi = require("./jadi.js").jadi;
 exports.newInstance = function(jadiInstance, relativePath) {
 	relativePath = relativePath || "";
-	jadiInstance = jadiInstance || jadi();
+	jadiInstance = jadi(jadiInstance);
 
 	return jadiInstance.plugIn(function() {
 		var container = this;
@@ -51,13 +51,12 @@ exports.newInstance = function(jadiInstance, relativePath) {
 						} else {
 							var dispatcher = jadiInstance.newInstance(beanDefinitions[j]);
 						}
-						dispatcher.setBeanFactory(jadiInstance);
+						if(dispatcher.setBeanFactory !== undefined){
+							dispatcher.setBeanFactory(jadiInstance);
+						}						
 						break;
 					}
 				}
-			}
-			if (dispatcher === undefined) {
-				throw "need to define a dispatcher";
 			}
 			container.factory.loadEagerBeans();
 			return dispatcher;

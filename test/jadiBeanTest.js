@@ -23,6 +23,9 @@ module.exports = function exportClazz(){
 			this.compare(bean1, "!==", bean2);
 			this.compare(bean1.equals(bean2), "===", true);
 		},
+		testParentBean : function(beanFromParent){
+			this.compare(beanFromParent.name, "===", "parent");
+		},
 		setBeanFactory : function(_factory){
 			factory = _factory;
 		}

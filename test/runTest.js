@@ -1,5 +1,7 @@
 "use strict";
-var jadiInstance = require("./../src/nodePlugIn.js").newInstance();
+var jadiParent = require("./../src/nodePlugIn.js").newInstance(undefined,"./parent/");
+jadiParent.load(["./parent/parentBean.js"]);
+var jadiInstance = require("./../src/nodePlugIn.js").newInstance(jadiParent);
 var jadiTest = require("jadiTest").jadiTest(jadiInstance);
 
 jadiTest.declareBeans({
@@ -56,7 +58,8 @@ jadiTest.run({
 			testBeanFactoryAwareBeanRetrival : [ "id:jadiUtils" ],
 			testExternalConsturtor : ["id:externalConstrutorTest"],
 			testEagerBean : ["id:eagerBean"],
-			testBeanScope : ["id:equalityBean","id:equalityBean"]
+			testBeanScope : ["id:equalityBean","id:equalityBean"],
+			testParentBean : ["id:parentBean"],
 		}
 	}
 });

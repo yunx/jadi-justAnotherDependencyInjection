@@ -1,5 +1,5 @@
 exports = exports || {};
-exports.jadi = function Jadi(){
+exports.jadi = function Jadi(parent){
 
 var define = (function createContainer(){
 	var utils = {
@@ -556,6 +556,9 @@ define.module("jadi.factory", function Factory(m, jadi){
 	return {
 		getBean : function(id){
 			var beanDefinition = jadi.factory.mapping.getBeanDefinition(id);
+			if(beanDefinition === undefined && parent !== undefined){
+				return parent.getBean(id);
+			}
 			if(beanDefinition === undefined){ throw new Error("bean : [" +id+"] has not been defined")};
 			return this.scope(beanDefinition.scope).get(id);
 		},
