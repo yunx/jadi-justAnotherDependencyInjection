@@ -34,6 +34,9 @@ exports.SomeTest = function(utils,strs){
 		testInitMethod : function (){
 			this.compare(inited, "===", true);
 		},
+		testJadiTestTimeout : function(){
+			this.exception(Error);
+		},
 		initMethod : function(){
 			inited = true;
 		}

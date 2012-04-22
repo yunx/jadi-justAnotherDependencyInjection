@@ -39,6 +39,9 @@ jadiTest.run({
 		suite : "Bean definition test suite",
 		injectMethods : {
 			testJadiTestParameterPassing : [ "path:jadi.utils" ]
+		},
+		timeout : {
+			testJadiTestTimeout : 10
 		}
 	}
 }, {

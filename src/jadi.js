@@ -174,7 +174,7 @@ define.module("jadi.factory.beanDefinition", function BeanDefinition(m,jadi){
 		}
 		if(utils.isObject(prop)){
 			if("path" in prop){
-				beanDef = jadi.factory.beanDefinition.normalize(prop);
+				var beanDef = jadi.factory.beanDefinition.normalize(prop);
 				beanDef.scope = "prototype";
 				return beanDef;
 			}
@@ -183,7 +183,7 @@ define.module("jadi.factory.beanDefinition", function BeanDefinition(m,jadi){
 		if(utils.isString(prop)){
 			var parsed = utils.parseColon(prop);
 			if(parsed && parsed.prefix === "path"){
-				beanDef = jadi.factory.beanDefinition.normalize({path:parsed.subfix});
+				var beanDef = jadi.factory.beanDefinition.normalize({path:parsed.subfix});
 				beanDef.scope = "prototype";
 				return beanDef;
 			}
@@ -270,13 +270,14 @@ define.module("jadi.factory.mapping", function Mapping(module,jadi){
 			return mapping[id];
 		},
 		addBeanDefinition : function(){
+			var args = arguments;
 			if(arguments[0].length !== undefined){
-				arguments = arguments[0]
+				args = arguments[0]
 			}			
-			var beanDefLength = arguments.length;
+			var beanDefLength = args.length;
 			var defNormalizer = jadi.factory.beanDefinition;
 			for(var i=0; i < beanDefLength; i++){
-				var beanDefinition = arguments[i];
+				var beanDefinition = args[i];
 				var id = beanDefinition.id;
 				if(id === undefined){
 					throw new Error(beanDefinition +" must specify an id.");
