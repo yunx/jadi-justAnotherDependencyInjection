@@ -51,9 +51,9 @@ exports.newInstance = function(jadiInstance, relativePath) {
 						} else {
 							var dispatcher = jadiInstance.newInstance(beanDefinitions[j]);
 						}
-						if(dispatcher.setBeanFactory !== undefined){
+						if (dispatcher.setBeanFactory !== undefined) {
 							dispatcher.setBeanFactory(jadiInstance);
-						}						
+						}
 						break;
 					}
 				}
@@ -62,6 +62,7 @@ exports.newInstance = function(jadiInstance, relativePath) {
 			return dispatcher;
 		}
 
+		require("./common/logger.js").makeAvailable();
 		return jadiInstance;
 	});
 }
