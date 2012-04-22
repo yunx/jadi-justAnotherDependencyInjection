@@ -41,7 +41,7 @@ jadiTest.run({
 			testJadiTestParameterPassing : [ "path:jadi.utils" ]
 		},
 		timeout : {
-			testJadiTestTimeout : 10
+			testJadiTestTimeout : 1000
 		}
 	}
 }, {
